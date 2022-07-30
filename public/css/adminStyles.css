@@ -1,0 +1,26 @@
+body{
+    text-align: center;
+}
+
+#full-container{
+    margin-top: 15px;
+}
+
+#new-player{
+    margin: auto;
+    width: 400px
+}
+
+#tabs{
+    margin-bottom: 30px;
+}
+
+li{
+    cursor: pointer;
+}
+
+.toastJ{
+    z-index: 99999;
+    position: absolute;
+    left: 10px;
+}   

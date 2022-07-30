@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href="/css/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <div id="leaderboard-container">
+        <% Object.keys(leaderboardData.games).forEach(function(gameKey) { %>
+        <%      let game = leaderboardData.games[gameKey]; %>
+
+        <div class="column">
+            <div class="board">
+                <div class="prize">
+                    <div class="prizePic">
+                        <img src="<%= game.prize.picture %>" />
+                    </div>
+                    <div class="prizeDesc">
+                        <%= game.prize.desc %>
+                    </div>
+                </div>
+                <% game.items.forEach(function(item, idx) { %>
+                <%      if(idx > 6) return; %>
+                    <div class="items">
+                        <div class="position">
+                            <%= idx > 2 ? idx+1 : '' %>
+                            
+                            <% if(idx == 0){ %>
+                            <img src="/icons/gold_medal.png" />
+                            <% } %>
+                            <% if(idx == 1){ %>
+                            <img src="/icons/silver_medal.png" />
+                            <% } %>
+                            <% if(idx == 2){ %>
+                            <img src="/icons/bronze_medal.png" />
+                            <% } %>
+                        </div>
+                        <div class="player-name">
+                            <%= item.nickname %>
+                        </div>
+                        <div class="points">
+                            <%= item.points %>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+        <% }) %>
+    </div>
+</body>
+
+</html>

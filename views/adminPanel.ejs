@@ -1,0 +1,167 @@
+<html>
+
+<head>
+    <link href="/css/adminStyles.css" rel="stylesheet" type="text/css">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/js/bootstrap.bundle.min.js"></script>
+
+    <script src="/js/jquery-3.6.0.min.js"></script>
+
+</head>
+
+<body>
+
+    <script>
+
+        let selectedTab = 0;
+        let selectedGame = "";
+
+
+        function changeTab(id) {
+            let tabToActive;
+
+            switch (id) {
+                case 0:
+                    tabToActive = document.getElementById("tab-add");
+                    tabToDeactive = document.getElementById("tab-edit");
+                    break;
+                case 1:
+                    tabToActive = document.getElementById("tab-edit");
+                    tabToDeactive = document.getElementById("tab-add");
+                    break;
+            }
+
+            let newPlayerForm = document.getElementById("new-player");
+            newPlayerForm.classList.toggle('d-none');
+
+            tabToActive.classList.toggle("active");
+            tabToDeactive.classList.toggle("active");
+        }
+
+        function add() {
+            var form = document.querySelectorAll('.needs-validation');
+
+            if (!form[0].checkValidity()) {
+                event.stopPropagation()
+            } else {
+                disableForm();
+
+                let firstName = document.getElementById("newName").value;
+                let lastName = document.getElementById("newLastName").value;
+                let dni = document.getElementById("newDNI").value;
+                let nickname = document.getElementById("newNickname").value;
+
+                let game = $("input[type=radio]:checked").val();
+
+                $.ajax({
+                    url: 'http://localhost:8080/addPlayer',
+                    type: 'POST',
+                    data: JSON.stringify({
+                        firstName,
+                        lastName,
+                        dni,
+                        nickname,
+                        game
+                    }),
+                    contentType: "application/json; charset=utf-8"
+                }).done(function (data) {
+
+                    $('.toast').toast('show');
+                    resetForm();
+                });
+            }
+
+            function disableForm() {
+                document.getElementById("wait-button").classList.toggle('d-none');
+                document.getElementById("new-button").classList.toggle('d-none');
+
+                $("form input").prop("disabled", true);
+            }
+
+            function resetForm() {
+                document.getElementById("wait-button").classList.toggle('d-none');
+                document.getElementById("new-button").classList.toggle('d-none');
+
+                $("form input").prop("disabled", false);
+
+                document.getElementById("newName").value = '';
+                document.getElementById("newLastName").value = '';
+                document.getElementById("newDNI").value = '';
+                document.getElementById("newNickname").value = '';
+            }
+        }
+    </script>
+
+            <div class="toastJ toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive"
+                aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        Jugador agregado correctamente!
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+                </div>
+            </div>
+
+    <div id="full-container">
+        <div id="headTabs" class="btn-group" role="group" aria-label="Basic radio toggle button group">
+            <input value="mk" type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
+            <label class="btn btn-outline-primary" for="btnradio1">Mortal Kombat</label>
+
+            <input value="valorant" type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+            <label class="btn btn-outline-primary" for="btnradio2">Valorant</label>
+
+            <input value="aimlab" type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
+            <label class="btn btn-outline-primary" for="btnradio3">Aimlab</label>
+        </div>
+    </div>
+    <hr>
+
+    <ul id="tabs" class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" id="tab-add" aria-current="page" onclick="changeTab(0)">Agregar</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-edit" aria-current="page" onclick="changeTab(1)">Modificar</a>
+        </li>
+    </ul>
+
+    <form class="needs-validation">
+        <div id="new-player">
+            <div class="mb-3 row">
+                <label for="newName" class="col-sm-3 col-form-label">Nombre</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="newName" required>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label for="newLastName" class="col-sm-3 col-form-label">Apellido</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="newLastName" required>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label for="newDNI" class="col-sm-3 col-form-label">DNI</label>
+                <div class="col-sm-9">
+                    <input type="number" class="form-control" id="newDNI" required>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label for="newNickname" class="col-sm-3 col-form-label">Nickname</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="newNickname" required>
+                </div>
+            </div>
+            <button id="new-button" type="submit" class="btn btn-outline-primary" onclick="add()">Agregar</button>
+
+            <button id="wait-button" class="btn btn-primary d-none" type="button" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Agregando
+            </button>
+        </div>
+    </form>
+    <hr>
+
+</body>
+
+</html>
