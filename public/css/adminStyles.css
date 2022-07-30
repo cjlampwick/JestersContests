@@ -24,3 +24,12 @@ li{
     position: absolute;
     left: 10px;
 }   
+
+.item-row{
+    display:flex;
+    flex-flow:row;
+}
+
+.item-row div{
+    width:100%;
+}

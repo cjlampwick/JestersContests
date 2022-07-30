@@ -12,30 +12,123 @@
 <body>
 
     <script>
-
         let selectedTab = 0;
         let selectedGame = "";
+        let itemsToSave = [];
 
+        function pickGame(elem){
+            if(selectedTab == 1)
+                changeTab(1);
+        }
+
+        function SaveChanges() {
+            itemsToSave.forEach((item, idx) => {
+                let htmlItem = $("#" + idx)[0].getElementsByClassName("form-control");
+
+                item.firstName = htmlItem[0].value;
+                item.lastName = htmlItem[1].value;
+                item.dni = htmlItem[2].value;
+                item.nickname = htmlItem[3].value;
+                item.points = Number(htmlItem[4].value);
+
+            });
+            
+            let game = $("input[type=radio]:checked").val();
+
+            $.ajax({
+                url: 'http://localhost:8080/updatePlayers',
+                type: 'POST',
+                data: JSON.stringify({
+                    items: itemsToSave,
+                    game: game
+                }),
+                contentType: "application/json; charset=utf-8"
+            }).done(function (data) {
+                if (data.status === 'ERROR') {
+                    $('.errorToast .toast-body')[0].innerHTML = data.errorMessage;
+                    $('.errorToast').toast('show');
+                } else {
+                    $('.successToast').toast('show');
+                }
+            });
+        }
 
         function changeTab(id) {
+            selectedTab = id;
             let tabToActive;
 
             switch (id) {
-                case 0:
-                    tabToActive = document.getElementById("tab-add");
-                    tabToDeactive = document.getElementById("tab-edit");
-                    break;
                 case 1:
-                    tabToActive = document.getElementById("tab-edit");
-                    tabToDeactive = document.getElementById("tab-add");
+                    document.getElementById("tab-add").classList.remove("active");
+                    document.getElementById("tab-edit").classList.add("active");
+
+                    document.getElementById("new-player").classList.add('d-none');
+
+                    let game = $("input[type=radio]:checked").val();
+
+                    $.ajax({
+                        url: 'http://localhost:8080/getPlayers',
+                        type: 'GET',
+                        data: {
+                            game
+                        },
+                        contentType: "application/json; charset=utf-8"
+                    }).done(function (data) {
+                        if (data.status === 'ERROR') {
+                            $('.errorToast .toast-body')[0].innerHTML = data.errorMessage;
+                            $('.errorToast').toast('show');
+                        } else {
+                            document.getElementById("edit-players").classList.remove('d-none');
+                            let newList = '';
+
+                            itemsToSave = data.items;
+
+                            data.items.forEach((item, idx) => {
+                                newList += `
+                                <div id="${idx}" class="item-row">
+                                    <div class="mb-3 row">
+                                        <div class="col-sm-9">
+                                            <input value="${item.firstName}" type="text" class="form-control" id="editedFirstName" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <div class="col-sm-9">
+                                            <input value="${item.lastName}" type="text" class="form-control" id="editedLastName" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <div class="col-sm-9">
+                                            <input value="${item.dni}" type="text" class="form-control" id="editedDNI" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <div class="col-sm-9">
+                                            <input value="${item.nickname}" type="text" class="form-control" id="editedNickName" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <div class="col-sm-9">
+                                            <input value="${item.points}" type="number" class="form-control" id="editedPoints" required>
+                                        </div>
+                                    </div>
+                                </div>`;
+                            });
+
+                            document.getElementById("listOfItems").innerHTML = newList;
+                        }
+                    }).catch(function (ex) {
+                        console.info(ex);
+                    });
+
+                    break;
+                case 0:
+                    document.getElementById("tab-add").classList.add("active");
+                    document.getElementById("tab-edit").classList.remove("active");
+
+                    document.getElementById("new-player").classList.remove('d-none');
+                    document.getElementById("edit-players").classList.add('d-none');
                     break;
             }
-
-            let newPlayerForm = document.getElementById("new-player");
-            newPlayerForm.classList.toggle('d-none');
-
-            tabToActive.classList.toggle("active");
-            tabToDeactive.classList.toggle("active");
         }
 
         function add() {
@@ -44,7 +137,7 @@
             if (!form[0].checkValidity()) {
                 event.stopPropagation()
             } else {
-                disableForm();
+                disableNewForm();
 
                 let firstName = document.getElementById("newName").value;
                 let lastName = document.getElementById("newLastName").value;
@@ -65,24 +158,33 @@
                     }),
                     contentType: "application/json; charset=utf-8"
                 }).done(function (data) {
-
-                    $('.toast').toast('show');
-                    resetForm();
+                    if (data.status === 'ERROR') {
+                        $('.errorToast .toast-body')[0].innerHTML = data.errorMessage;
+                        $('.errorToast').toast('show');
+                        enableNewForm();
+                    } else {
+                        $('.successToast').toast('show');
+                        resetNewForm();
+                    }
                 });
             }
 
-            function disableForm() {
+            function disableNewForm() {
                 document.getElementById("wait-button").classList.toggle('d-none');
                 document.getElementById("new-button").classList.toggle('d-none');
 
                 $("form input").prop("disabled", true);
             }
 
-            function resetForm() {
+            function enableNewForm() {
                 document.getElementById("wait-button").classList.toggle('d-none');
                 document.getElementById("new-button").classList.toggle('d-none');
 
                 $("form input").prop("disabled", false);
+            }
+
+            function resetNewForm() {
+                enableNewForm();
 
                 document.getElementById("newName").value = '';
                 document.getElementById("newLastName").value = '';
@@ -92,26 +194,37 @@
         }
     </script>
 
-            <div class="toastJ toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive"
-                aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        Jugador agregado correctamente!
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                        aria-label="Close"></button>
-                </div>
+    <div class="successToast toastJ toast align-items-center text-white bg-success border-0" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                Jugador agregado correctamente!
             </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
+    </div>
+
+    <div class="errorToast toastJ toast align-items-center text-white bg-danger border-0" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                Error
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
+    </div>
 
     <div id="full-container">
         <div id="headTabs" class="btn-group" role="group" aria-label="Basic radio toggle button group">
-            <input value="mk" type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
+            <input onclick="pickGame(this)" value="mk" type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
             <label class="btn btn-outline-primary" for="btnradio1">Mortal Kombat</label>
 
-            <input value="valorant" type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+            <input onclick="pickGame(this)" value="valorant" type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
             <label class="btn btn-outline-primary" for="btnradio2">Valorant</label>
 
-            <input value="aimlab" type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
+            <input onclick="pickGame(this)" value="aimlab" type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
             <label class="btn btn-outline-primary" for="btnradio3">Aimlab</label>
         </div>
     </div>
@@ -126,8 +239,8 @@
         </li>
     </ul>
 
-    <form class="needs-validation">
-        <div id="new-player">
+    <div id="new-player">
+        <form class="needs-validation">
             <div class="mb-3 row">
                 <label for="newName" class="col-sm-3 col-form-label">Nombre</label>
                 <div class="col-sm-9">
@@ -158,8 +271,34 @@
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 Agregando
             </button>
+        </form>
+    </div>
+
+    <div id="edit-players" class="d-none">
+        <div class="item-row">
+            <div>
+                Nombre
+            </div>
+            <div>
+                Apellido
+            </div>
+            <div>
+                DNI
+            </div>
+            <div>
+                Nickname
+            </div>
+            <div>
+                Puntos
+            </div>
         </div>
-    </form>
+
+        <div id="listOfItems">
+
+        </div>
+
+        <button type="button" class="btn btn-outline-primary" onclick="SaveChanges()">Guardar Cambios</button>
+    </div>
     <hr>
 
 </body>
